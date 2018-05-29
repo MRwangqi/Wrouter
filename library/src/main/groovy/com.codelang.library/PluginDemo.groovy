@@ -24,6 +24,9 @@ public class PluginDemo extends Transform implements Plugin<Project> {
         System.out.println("这是我们的自定义插件!");
         System.out.println("------------------结束----------------------->");
 
+        project.extensions.create("demoBuild", DemoExtension)
+
+
         //拿到android
         def android = project.extensions.getByType(AppExtension)
         //给android注册transform
@@ -35,6 +38,7 @@ public class PluginDemo extends Transform implements Plugin<Project> {
         //层层都是dependOn依赖每个task，task依赖方面的知识可以看下教父的文章
         //链接是:https://blog.csdn.net/lzyzsd/article/details/46935405
 
+
     }
 
     public void transform(
@@ -45,6 +49,12 @@ public class PluginDemo extends Transform implements Plugin<Project> {
             boolean isIncremental) throws IOException, TransformException, InterruptedException {
 
         super.transform(context, inputs, referencedInputs, outputProvider, isIncremental)
+
+        //输出app gradle设置的 extension
+        def desc = project.extensions.demoBuild.desc
+        def isAuto = project.extensions.demoBuild.isAuto
+        println "==== extension === " + desc + "---" + isAuto
+
 
         inputs.each { TransformInput input ->
             input.directoryInputs.each { DirectoryInput directoryInput ->
@@ -87,7 +97,7 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
     }
 
-
+    //这个名字会在app-build-intermediates-getName  生成该名字的文件夹
     @Override
     String getName() {
         return PluginDemo.getName()
@@ -98,7 +108,7 @@ public class PluginDemo extends Transform implements Plugin<Project> {
     Set<QualifiedContent.ContentType> getInputTypes() {
         return TransformManager.CONTENT_CLASS
     }
-
+//范围
     @Override
     Set<? super QualifiedContent.Scope> getScopes() {
         return TransformManager.SCOPE_FULL_PROJECT
