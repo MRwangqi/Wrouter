@@ -19,10 +19,11 @@ android {
     }
 }
 
-demoBuild{
-    isAuto=true
-    desc="12312"
-}
+//demoBuild{
+//    isAuto=true
+//    desc="12312"
+//    route = "com.codelang.transform.Route"
+//}
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')

@@ -5,6 +5,9 @@ import javassist.CtClass
 import javassist.CtMethod
 import org.gradle.api.Project
 
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+
 public class MyInjects {
     //初始化类池
     private final static ClassPool pool = ClassPool.getDefault();
@@ -47,5 +50,41 @@ public class MyInjects {
             }
         }
 
+    }
+
+
+    public static void scanJar(File jarFile, File destFile) {
+        if (jarFile) {
+            def file = new JarFile(jarFile)
+            Enumeration enumeration = file.entries()
+            while (enumeration.hasMoreElements()) {
+                JarEntry jarEntry = (JarEntry) enumeration.nextElement()
+                String entryName = jarEntry.getName()
+
+                //拿到对应class类  这个class类的路径是用斜杠标识的，我们需要转换成点号
+                showClass(entryName)
+            }
+            file.close()
+        }
+    }
+
+
+    static void showClass(String className) {
+
+        className = className.replace("/", ".");
+        className = className.substring(0, className.lastIndexOf("."));
+
+        println "---------" + className
+
+
+    }
+
+
+    static boolean shouldProcessPreDexJar(String path) {
+        return !path.contains("com.android.support") && !path.contains("/android/m2repository")
+    }
+
+    static boolean shouldProcessClass(String entryName) {
+        return entryName != null && entryName.startsWith("com/codelang/transform/")
     }
 }

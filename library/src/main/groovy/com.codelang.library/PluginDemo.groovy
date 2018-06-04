@@ -26,7 +26,6 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
         project.extensions.create("demoBuild", DemoExtension)
 
-
         //拿到android
         def android = project.extensions.getByType(AppExtension)
         //给android注册transform
@@ -53,54 +52,65 @@ public class PluginDemo extends Transform implements Plugin<Project> {
         //输出app gradle设置的 extension
         def desc = project.extensions.demoBuild.desc
         def isAuto = project.extensions.demoBuild.isAuto
+        def route=project.extensions.demoBuild.route
         println "==== extension === " + desc + "---" + isAuto
+
+        boolean leftSlash = File.separator == '/'
 
 
         inputs.each { TransformInput input ->
+            // scan class files
             input.directoryInputs.each { DirectoryInput directoryInput ->
 
-                //注入代码操作
-                MyInjects.inject(directoryInput.file.absolutePath, project)
+                File dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
+                String root = directoryInput.file.absolutePath
 
-                if (directoryInput.file.isDirectory()) {
-                    println "==== directoryInput.file === " + directoryInput.file
-                    directoryInput.file.eachFileRecurse { File file ->
-                        // ...对目录进行插入字节码
+                if (!root.endsWith(File.separator))
+                    root += File.separator
+                directoryInput.file.eachFileRecurse { File file ->
+                    def path = file.absolutePath.replace(root, '')
+                    if (!leftSlash) {
+                        path = path.replaceAll("\\\\", "/")
+                    }
+
+                    if (file.isFile() && MyInjects.shouldProcessClass(path)) {
+                        MyInjects.showClass(path)
                     }
                 }
-                //处理完输入文件之后，要把输出给下一个任务
-                def dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
+                // copy to dest
                 FileUtils.copyDirectory(directoryInput.file, dest)
+
+
             }
-
+            // scan all jars
             input.jarInputs.each { JarInput jarInput ->
-                println "------=== jarInput.file === " + jarInput.file.getAbsolutePath()
-                File tempFile = null
-                if (jarInput.file.getAbsolutePath().endsWith(".jar")) {
-                    // ...对jar进行插入字节码
-                }
-                /**
-                 * 重名输出文件,因为可能同名,会覆盖
-                 */
-                def jarName = jarInput.name
 
-                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
-                if (jarName.endsWith(".jar")) {
-                    jarName = jarName.substring(0, jarName.length() - 4)
+                String destName = jarInput.name
+                def hexName = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
+                if (destName.endsWith(".jar")) {
+                    destName = destName.substring(0, destName.length() - 4)
                 }
-                //处理jar进行字节码注入处理
-                def dest = outputProvider.getContentLocation(jarName + md5Name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
-                FileUtils.copyFile(jarInput.file, dest)
+                //原来input的文件
+                File src = jarInput.file
+                //新生成output的文件
+                File dest = outputProvider.getContentLocation(destName + "_" + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR)
 
+
+                //排除掉m2repository和support路径的jar包
+                if (MyInjects.shouldProcessPreDexJar(src.absolutePath)) {
+                    MyInjects.scanJar(src, dest)
+                }
+                FileUtils.copyFile(src, dest)
             }
         }
+
 
     }
 
     //这个名字会在app-build-intermediates-getName  生成该名字的文件夹
     @Override
     String getName() {
-        return PluginDemo.getName()
+        return "codelang"
     }
 
 //要处理的数据类型  有class文件和resource资源文件
