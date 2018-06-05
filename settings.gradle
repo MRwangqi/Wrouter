@@ -1,1 +1,1 @@
-include ':app', ':library'
+include ':app', ':wrouter-register', ':wrouter-annotation', ':wrouter-compiler', ':wrouter-api'
