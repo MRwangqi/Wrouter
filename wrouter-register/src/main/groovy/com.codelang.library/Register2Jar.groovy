@@ -49,7 +49,7 @@ class Register2Jar {
                 jarOutputStream.putNextEntry(zipEntry)
                 if ("com/codelang/api/core/WRouter.class" == entryName) {
 
-                   println('Insert init code to class >> ' + entryName)
+                    println('Insert init code to class >> ' + entryName)
 
                     def bytes = referHackWhenInit(inputStream)
                     jarOutputStream.write(bytes)
@@ -70,7 +70,6 @@ class Register2Jar {
         return jarFile
     }
 
-    //refer hack class when object init
     private byte[] referHackWhenInit(InputStream inputStream) {
         ClassReader cr = new ClassReader(inputStream)
         ClassWriter cw = new ClassWriter(cr, 0)
@@ -96,6 +95,9 @@ class Register2Jar {
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions)
             //是不是loadRouterMap方法
             if (name == "loadMap") {
+                boolean _static = (access & Opcodes.ACC_STATIC) > 0
+
+                println("static------"+_static)
                 mv = new RouteMethodVisitor(Opcodes.ASM5, mv)
             }
             return mv
@@ -114,6 +116,7 @@ class Register2Jar {
             if ((opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN)) {
                 PluginDemo.clazzList.each { name ->
                     name = name.replaceAll("/", ".")
+                    println("asm-----" + name)
                     mv.visitLdcInsn(name)//存储group分组的module类名
                     // generate invoke register method into LogisticsCenter.loadRouterMap()
                     mv.visitMethodInsn(Opcodes.INVOKESTATIC

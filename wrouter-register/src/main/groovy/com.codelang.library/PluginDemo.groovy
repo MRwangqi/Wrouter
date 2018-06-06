@@ -56,6 +56,9 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
         super.transform(context, inputs, referencedInputs, outputProvider, isIncremental)
 
+        clazzList.clear()
+        pathList.clear()
+
         //输出app gradle设置的 extension
         def desc = project.extensions.demoBuild.desc
         def isAuto = project.extensions.demoBuild.isAuto

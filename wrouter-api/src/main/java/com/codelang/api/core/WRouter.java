@@ -9,7 +9,9 @@ import android.util.Log;
 import com.codelang.api.template.IRouteGroup;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author wangqi
@@ -21,6 +23,7 @@ public class WRouter {
     private static Context mContext;
 
     private static Map<String, Class> routes = new HashMap<>();
+
 
     private WRouter() {
 
@@ -46,16 +49,18 @@ public class WRouter {
         //待插入字节码区域,插入之后会变成如下代码
 //        register(new com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent());
 //        register(new com.codelang.wrouter.routes.Wrouter$$Group$$app());
+
 //        register("com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent");
     }
 
 
     public static void register(String routeGroupPath) {
-        try {
-            ((IRouteGroup) (Class.forName(routeGroupPath).getConstructor().newInstance())).loadMap(routes);
-        } catch (Exception e) {
-            android.util.Log.i("tag", "反射失败");
-        }
+            Log.i("routeGroupPath", routeGroupPath);
+            try {
+                ((IRouteGroup) (Class.forName(routeGroupPath).getConstructor().newInstance())).loadMap(routes);
+            } catch (Exception e) {
+                android.util.Log.i("tag", "反射失败");
+            }
     }
 
 
