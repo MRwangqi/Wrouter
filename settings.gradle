@@ -1,1 +1,1 @@
-include ':app', ':wrouter-register', ':wrouter-annotation', ':wrouter-compiler', ':wrouter-api'
+include ':app', ':wrouter-register', ':wrouter-annotation', ':wrouter-compiler', ':wrouter-api', ':readcomponent'

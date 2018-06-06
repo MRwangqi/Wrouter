@@ -14,7 +14,14 @@ import org.gradle.api.Project
  * https://www.jianshu.com/p/37df81365edf
  */
 public class PluginDemo extends Transform implements Plugin<Project> {
-    private Project project
+    static Project project
+
+    static File fileContainsInitClass
+
+    static List<String> clazzList = new ArrayList<>()
+
+    static List<String> pathList = new ArrayList<>()
+
 
     @Override
     void apply(Project project) {
@@ -52,7 +59,8 @@ public class PluginDemo extends Transform implements Plugin<Project> {
         //输出app gradle设置的 extension
         def desc = project.extensions.demoBuild.desc
         def isAuto = project.extensions.demoBuild.isAuto
-        def route=project.extensions.demoBuild.route
+
+
         println "==== extension === " + desc + "---" + isAuto
 
         boolean leftSlash = File.separator == '/'
@@ -65,6 +73,8 @@ public class PluginDemo extends Transform implements Plugin<Project> {
                 File dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
                 String root = directoryInput.file.absolutePath
 
+//                MyInjects.inject(root,project)
+
                 if (!root.endsWith(File.separator))
                     root += File.separator
                 directoryInput.file.eachFileRecurse { File file ->
@@ -75,6 +85,9 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
                     if (file.isFile() && MyInjects.shouldProcessClass(path)) {
                         MyInjects.showClass(path)
+
+                        pathList.add(root)
+                        println "class path=" + root
                     }
                 }
                 // copy to dest
@@ -95,15 +108,23 @@ public class PluginDemo extends Transform implements Plugin<Project> {
                 //新生成output的文件
                 File dest = outputProvider.getContentLocation(destName + "_" + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR)
 
-
                 //排除掉m2repository和support路径的jar包
                 if (MyInjects.shouldProcessPreDexJar(src.absolutePath)) {
                     MyInjects.scanJar(src, dest)
+                    pathList.add(src.absolutePath)
+                    println "jar path=" + src.absolutePath
                 }
                 FileUtils.copyFile(src, dest)
             }
         }
 
+        //扫描结束，判断fileContainsInitClass是否为空，
+        //如果不为空，说明我们需要插入的字节码的类在jar包中
+        //这时候，我们需要对jar做一些处理
+        if (fileContainsInitClass) {
+            Register2Jar.insertInitCodeTo()
+
+        }
 
     }
 

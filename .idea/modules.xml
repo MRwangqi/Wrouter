@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Transform.iml" filepath="$PROJECT_DIR$/Transform.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/readcomponent/readcomponent.iml" filepath="$PROJECT_DIR$/readcomponent/readcomponent.iml" />
       <module fileurl="file://$PROJECT_DIR$/wrouter-annotation/wrouter-annotation.iml" filepath="$PROJECT_DIR$/wrouter-annotation/wrouter-annotation.iml" />
       <module fileurl="file://$PROJECT_DIR$/wrouter-api/wrouter-api.iml" filepath="$PROJECT_DIR$/wrouter-api/wrouter-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/wrouter-compiler/wrouter-compiler.iml" filepath="$PROJECT_DIR$/wrouter-compiler/wrouter-compiler.iml" />

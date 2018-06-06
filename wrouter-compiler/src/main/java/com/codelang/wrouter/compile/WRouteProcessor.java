@@ -163,13 +163,11 @@ public class WRouteProcessor extends AbstractProcessor {
             //将类写到文件
             JavaFile.builder(Constant.PACKAGE_OF_GENERATE_FILE, routClass).build().writeTo(mFiler);
         } catch (Exception e) {
-            mMessager.printMessage(Diagnostic.Kind.NOTE, Constant.PACKAGE_OF_GENERATE_FILE);
-            mMessager.printMessage(Diagnostic.Kind.NOTE, routClass.name);
-            mMessager.printMessage(Diagnostic.Kind.NOTE, "写文件失败");
+            mMessager.printMessage(Diagnostic.Kind.NOTE, Constant.PACKAGE_OF_GENERATE_FILE + "." + routClass.name);
         }
+
         return false;
     }
-
 
 
 }
