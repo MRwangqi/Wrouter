@@ -1,6 +1,6 @@
 package com.codelang.library
 
-public class DemoExtension {
+ class DemoExtension {
     boolean isAuto = false
     String desc = "default"
 }

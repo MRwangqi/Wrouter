@@ -1,4 +1,4 @@
-package com.codelang.wrouter.compile;
+package com.codelang.wrouter.compile.process;
 
 import com.codelang.wrouter.annotation.WRoute;
 import com.codelang.wrouter.compile.utils.Constant;

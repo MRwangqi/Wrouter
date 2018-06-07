@@ -14,8 +14,7 @@ public class Constant {
 
     public static final String WARNING_TIPS = "此处是通过apt生成的类";
 
-
-    public static final String IROUTE_GROUP="com.codelang.api.template.IRouteGroup";
+    public static final String IROUTE_GROUP = "com.codelang.api.template.IRouteGroup";
 
 
 }

@@ -7,11 +7,12 @@ import java.lang.annotation.Target;
 
 /**
  * @author wangqi
- * @since 2018/6/5 10:23
+ * @since 2018/6/7 11:04
+ * <p>
+ * 向外提供对象  比如View对象或是Fragment对象
  */
-
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Autowired {
-    String name() default "";
+public @interface ProviderObj {
+    String path();
 }

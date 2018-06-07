@@ -3,17 +3,21 @@ package com.codelang.library
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.api.transform.*
-import com.android.build.gradle.AppExtension
 import com.android.build.gradle.internal.pipeline.TransformManager
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
-import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /**
  * https://www.jianshu.com/p/37df81365edf
+ //所有注册transform都会被添加到transformManager进行管理，执行的时候，也是按添加的顺序遍历执行
+ //如果想看gradle task的执行流程的话，可以看下TaskManager的createAndroidTestVariantTasks方法，
+ // 整个Task的执行流程都可以看到，先判断是否是javac编译还是jack编译，
+ // 然后看下createPostCompilationTasks方法，transform、ProGuard、multiDex、DexTransform，
+ //层层都是dependOn依赖每个task，task依赖方面的知识可以看下教父的文章
+ //链接是:https://blog.csdn.net/lzyzsd/article/details/46935405
  */
-public class PluginDemo extends Transform implements Plugin<Project> {
+class RouteTransform extends Transform {
     static Project project
 
     static File fileContainsInitClass
@@ -22,32 +26,14 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
     static List<String> pathList = new ArrayList<>()
 
+    static List<String> applicationList = new ArrayList<>()
 
-    @Override
-    void apply(Project project) {
-        this.project = project
-
-        System.out.println("------------------开始----------------------");
-        System.out.println("这是我们的自定义插件!");
-        System.out.println("------------------结束----------------------->");
-
-        project.extensions.create("demoBuild", DemoExtension)
-
-        //拿到android
-        def android = project.extensions.getByType(AppExtension)
-        //给android注册transform
-        android.registerTransform(this)
-        //所有注册transform都会被添加到transformManager进行管理，执行的时候，也是按添加的顺序遍历执行
-        //如果想看gradle task的执行流程的话，可以看下TaskManager的createAndroidTestVariantTasks方法，
-        // 整个Task的执行流程都可以看到，先判断是否是javac编译还是jack编译，
-        // 然后看下createPostCompilationTasks方法，transform、ProGuard、multiDex、DexTransform，
-        //层层都是dependOn依赖每个task，task依赖方面的知识可以看下教父的文章
-        //链接是:https://blog.csdn.net/lzyzsd/article/details/46935405
-
-
+    RouteTransform(Project pro) {
+        project = pro
     }
 
-    public void transform(
+
+    void transform(
             @NonNull Context context,
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
@@ -58,16 +44,15 @@ public class PluginDemo extends Transform implements Plugin<Project> {
 
         clazzList.clear()
         pathList.clear()
+        applicationList.clear()
 
         //输出app gradle设置的 extension
         def desc = project.extensions.demoBuild.desc
         def isAuto = project.extensions.demoBuild.isAuto
 
-
         println "==== extension === " + desc + "---" + isAuto
 
         boolean leftSlash = File.separator == '/'
-
 
         inputs.each { TransformInput input ->
             // scan class files
@@ -76,28 +61,25 @@ public class PluginDemo extends Transform implements Plugin<Project> {
                 File dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
                 String root = directoryInput.file.absolutePath
 
-//                MyInjects.inject(root,project)
 
                 if (!root.endsWith(File.separator))
                     root += File.separator
                 directoryInput.file.eachFileRecurse { File file ->
+
                     def path = file.absolutePath.replace(root, '')
                     if (!leftSlash) {
                         path = path.replaceAll("\\\\", "/")
                     }
-
-                    if (file.isFile() && MyInjects.shouldProcessClass(path)) {
-                        MyInjects.showClass(path)
-
+                    if (file.isFile()) {
+                        ScanClass.showClass(path)
                         pathList.add(root)
                         println "class path=" + root
                     }
                 }
                 // copy to dest
                 FileUtils.copyDirectory(directoryInput.file, dest)
-
-
             }
+
             // scan all jars
             input.jarInputs.each { JarInput jarInput ->
 
@@ -112,8 +94,8 @@ public class PluginDemo extends Transform implements Plugin<Project> {
                 File dest = outputProvider.getContentLocation(destName + "_" + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR)
 
                 //排除掉m2repository和support路径的jar包
-                if (MyInjects.shouldProcessPreDexJar(src.absolutePath)) {
-                    MyInjects.scanJar(src, dest)
+                if (ScanClass.shouldProcessPreDexJar(src.absolutePath)) {
+                    ScanClass.scanJar(src, dest)
                     pathList.add(src.absolutePath)
                     println "jar path=" + src.absolutePath
                 }
@@ -125,9 +107,13 @@ public class PluginDemo extends Transform implements Plugin<Project> {
         //如果不为空，说明我们需要插入的字节码的类在jar包中
         //这时候，我们需要对jar做一些处理
         if (fileContainsInitClass) {
-            Register2Jar.insertInitCodeTo()
-
+            InjectByteCode.insertInitCodeTo()
         }
+
+//        //判断application集合是否为空，不为空的话就进行插入操作
+//        if (applicationList) {
+//            println "app="+applicationList.toString()
+//        }
 
     }
 

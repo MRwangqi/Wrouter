@@ -19,6 +19,7 @@ public class ReadActivity extends AppCompatActivity {
     }
 
 
+
     public void back(View view) {
 
         Intent intent = getIntent();

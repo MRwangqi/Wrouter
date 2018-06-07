@@ -1,10 +1,10 @@
-apply plugin: 'com.android.application'
+//apply plugin: 'com.android.application'
 apply plugin: 'codelang.plugin'
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.3"
     defaultConfig {
-        applicationId "com.codelang.transform"
+
         minSdkVersion 15
         targetSdkVersion 26
         versionCode 1
@@ -17,7 +17,6 @@ android {
                 arguments = [moduleName: project.getName()]
             }
         }
-
 
     }
 
@@ -48,5 +47,5 @@ dependencies {
     annotationProcessor project(':wrouter-compiler')
     compile project(':wrouter-annotation')
     compile project(':wrouter-api')
-    compile project(":readcomponent")
+//    compile project(":readcomponent")
 }

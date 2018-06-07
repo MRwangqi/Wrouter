@@ -5,11 +5,14 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.codelang.api.template.IRouteGroup;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,16 +44,28 @@ public class WRouter {
 
     public static void init(Application app) {
         mContext = app;
+        initApplication();
         loadMap();
     }
 
-
+    /**
+     * 待插入字节码区域,插入之后会变成如下代码
+     * //路由的插入
+     * register(new com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent());
+     * register("com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent");
+     * //Application的插入
+     * init("com.codelang.wrouter.app.Application$$readcomponent")
+     */
     public static void loadMap() {
-        //待插入字节码区域,插入之后会变成如下代码
-//        register(new com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent());
-//        register(new com.codelang.wrouter.routes.Wrouter$$Group$$app());
+        //register("com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent");
+    }
 
-//        register("com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent");
+    /**
+     * 待插入字节码区域，application的插入
+     * 就像  registerApp("com.codelang.applike.ReadApplication");
+     */
+    public static void initApplication() {
+        //registerApp("com.codelang.applike.ReadApplication");
     }
 
 
@@ -60,6 +75,19 @@ public class WRouter {
             ((IRouteGroup) (Class.forName(routeGroupPath).getConstructor().newInstance())).loadMap(routes);
         } catch (Exception e) {
             android.util.Log.i("tag", "反射失败");
+        }
+    }
+
+    public static void registerApp(String appPath) {
+        Log.i("appPath", appPath);
+        try {
+            Class clazz = Class.forName(appPath);
+            Method method = clazz.getDeclaredMethod("onCreate", Application.class);
+            method.setAccessible(true);
+            method.invoke(clazz.newInstance(), mContext);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "反射失败，可能错误原因是组件module实现的appLike对象没有实现AppLike接口");
         }
     }
 
@@ -92,17 +120,21 @@ public class WRouter {
         }
 
 
-        public void navigation(Context context, int requestCode) {
+        public void navigation(Context context, final int requestCode) {
             mContext = context != null ? context : mContext;
-            Intent intent = new Intent(mContext, routes.get(path));
+            final Intent intent = new Intent(mContext, routes.get(path));
             intent.putExtras(bundle);
-            if (requestCode > 0) {
-                ((Activity) mContext).startActivityForResult(intent, requestCode);
-            } else {
-                mContext.startActivity(intent);
-            }
-
-
+            //避免在子线程中会调用navigation操作
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    if (requestCode > 0) {
+                        ((Activity) mContext).startActivityForResult(intent, requestCode);
+                    } else {
+                        mContext.startActivity(intent);
+                    }
+                }
+            });
         }
     }
 
