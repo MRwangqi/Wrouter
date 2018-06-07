@@ -1,9 +1,11 @@
 package com.codelang.api.core;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.codelang.api.template.IRouteGroup;
@@ -26,21 +28,19 @@ public class WRouter {
 
 
     private WRouter() {
-
     }
+
+    public static class Inner {
+        private static final WRouter INSTANCE = new WRouter();
+    }
+
+    public static WRouter getInstance() {
+        return Inner.INSTANCE;
+    }
+
 
     public static void init(Application app) {
         mContext = app;
-
-//        try {
-//            //com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent
-//            String className = "com.codelang.wrouter.routes.Wrouter$$Group$$readcomponent";
-//            ((IRouteGroup) (Class.forName(className).getConstructor().newInstance())).loadMap(routes);
-//
-//        } catch (Exception e) {
-//            android.util.Log.i("tag", "反射失败");
-//        }
-
         loadMap();
     }
 
@@ -55,21 +55,12 @@ public class WRouter {
 
 
     public static void register(String routeGroupPath) {
-            Log.i("routeGroupPath", routeGroupPath);
-            try {
-                ((IRouteGroup) (Class.forName(routeGroupPath).getConstructor().newInstance())).loadMap(routes);
-            } catch (Exception e) {
-                android.util.Log.i("tag", "反射失败");
-            }
-    }
-
-
-    public static class Inner {
-        private static final WRouter INSTANCE = new WRouter();
-    }
-
-    public static WRouter getInstance() {
-        return Inner.INSTANCE;
+        Log.i("routeGroupPath", routeGroupPath);
+        try {
+            ((IRouteGroup) (Class.forName(routeGroupPath).getConstructor().newInstance())).loadMap(routes);
+        } catch (Exception e) {
+            android.util.Log.i("tag", "反射失败");
+        }
     }
 
 
@@ -97,9 +88,21 @@ public class WRouter {
         }
 
         public void navigation() {
+            navigation(null, -1);
+        }
+
+
+        public void navigation(Context context, int requestCode) {
+            mContext = context != null ? context : mContext;
             Intent intent = new Intent(mContext, routes.get(path));
             intent.putExtras(bundle);
-            mContext.startActivity(intent);
+            if (requestCode > 0) {
+                ((Activity) mContext).startActivityForResult(intent, requestCode);
+            } else {
+                mContext.startActivity(intent);
+            }
+
+
         }
     }
 
